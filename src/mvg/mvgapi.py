@@ -16,7 +16,7 @@ MVGAPI_DEFAULT_LIMIT = 10  # API defaults to 10, limits to 100
 class Base(Enum):
     """MVG APIs base URLs."""
 
-    FIB = "https://www.mvg.de/api/fib/v2"
+    FIB = "https://www.mvg.de/api/fib/v3"
     ZDM = "https://www.mvg.de/.rest/zdm"
 
 
@@ -25,7 +25,10 @@ class Endpoint(Enum):
 
     FIB_LOCATION: tuple[str, list[str]] = ("/location", ["query"])
     FIB_NEARBY: tuple[str, list[str]] = ("/station/nearby", ["latitude", "longitude"])
-    FIB_DEPARTURE: tuple[str, list[str]] = ("/departure", ["globalId", "limit", "offsetInMinutes"])
+    FIB_DEPARTURE: tuple[str, list[str]] = (
+        "/departure",
+        ["globalId", "limit", "offsetInMinutes"],
+    )
     ZDM_STATION_IDS: tuple[str, list[str]] = ("/mvgStationGlobalIds", [])
     ZDM_STATIONS: tuple[str, list[str]] = ("/stations", [])
     ZDM_LINES: tuple[str, list[str]] = ("/lines", [])
@@ -98,7 +101,9 @@ class MvgApi:
         return True
 
     @staticmethod
-    async def __api(base: Base, endpoint: Endpoint, args: dict[str, Any] | None = None) -> Any:
+    async def __api(
+        base: Base, endpoint: Endpoint, args: dict[str, Any] | None = None
+    ) -> Any:
         """
         Call the API endpoint with the given arguments.
 
@@ -118,13 +123,19 @@ class MvgApi:
                     url.url,
                 ) as resp:
                     if resp.status != 200:
-                        raise MvgApiError(f"Bad API call: Got response ({resp.status}) from {url.url}")
+                        raise MvgApiError(
+                            f"Bad API call: Got response ({resp.status}) from {url.url}"
+                        )
                     if resp.content_type != "application/json":
-                        raise MvgApiError(f"Bad API call: Got content type {resp.content_type} from {url.url}")
+                        raise MvgApiError(
+                            f"Bad API call: Got content type {resp.content_type} from {url.url}"
+                        )
                     return await resp.json()
 
         except aiohttp.ClientError as exc:
-            raise MvgApiError(f"Bad API call: Got {str(type(exc))} from {url.url}") from exc
+            raise MvgApiError(
+                f"Bad API call: Got {str(type(exc))} from {url.url}"
+            ) from exc
 
     @staticmethod
     async def station_ids_async() -> list[str]:
@@ -353,10 +364,18 @@ class MvgApi:
 
         try:
             args = dict.fromkeys(Endpoint.FIB_LOCATION.value[1])
-            args.update({"globalId": station_id, "offsetInMinutes": offset, "limit": limit})
+            args.update(
+                {"globalId": station_id, "offsetInMinutes": offset, "limit": limit}
+            )
             if transport_types is None:
                 transport_types = TransportType.all()
-            args.update({"transportTypes": ",".join([product.name for product in transport_types])})
+            args.update(
+                {
+                    "transportTypes": ",".join(
+                        [product.name for product in transport_types]
+                    )
+                }
+            )
             result = await MvgApi.__api(Base.FIB, Endpoint.FIB_DEPARTURE, args)
             assert isinstance(result, list)
 
@@ -366,12 +385,15 @@ class MvgApi:
                     {
                         "time": int(departure["realtimeDepartureTime"] / 1000),
                         "planned": int(departure["plannedDepartureTime"] / 1000),
+                        "platform": departure.get("platform"),
+                        "realtime": departure["realtime"],
                         "line": departure["label"],
                         "destination": departure["destination"],
                         "type": TransportType[departure["transportType"]].value[0],
                         "icon": TransportType[departure["transportType"]].value[1],
                         "cancelled": departure["cancelled"],
                         "messages": departure["messages"],
+                        "stopPointGlobalId": departure["stopPointGlobalId"],
                     }
                 )
             return departures
@@ -380,7 +402,10 @@ class MvgApi:
             raise MvgApiError("Bad MVG API call: Invalid departure data") from exc
 
     def departures(
-        self, limit: int = MVGAPI_DEFAULT_LIMIT, offset: int = 0, transport_types: list[TransportType] | None = None
+        self,
+        limit: int = MVGAPI_DEFAULT_LIMIT,
+        offset: int = 0,
+        transport_types: list[TransportType] | None = None,
     ) -> list[dict[str, Any]]:
         """
         Retreive the next departures.
@@ -405,4 +430,6 @@ class MvgApi:
             }, ... ]
 
         """
-        return asyncio.run(self.departures_async(self.station_id, limit, offset, transport_types))
+        return asyncio.run(
+            self.departures_async(self.station_id, limit, offset, transport_types)
+        )
