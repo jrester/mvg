@@ -67,15 +67,9 @@ class MvgApi:
     :raises ValueError: raised on bad station id format
     """
 
-    def __init__(self, station: str) -> None:
+    def __init__(self, station_id: str) -> None:
         """Initialize the MVG interface."""
-        station = station.strip()
-        if not self.valid_station_id(station):
-            raise ValueError("Invalid station.")
-
-        station_details = self.station(station)
-        if station_details:
-            self.station_id = station_details["id"]
+        self.station_id = station_id
 
     @staticmethod
     def valid_station_id(station_id: str, validate_existance: bool = False) -> bool:
