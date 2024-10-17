@@ -18,6 +18,7 @@ class Base(Enum):
 
     FIB = "https://www.mvg.de/api/fib/v3"
     ZDM = "https://www.mvg.de/.rest/zdm"
+    BGW_PT = "https://www.mvg.de/api/bgw-pt/v3"
 
 
 class Endpoint(Enum):
@@ -32,6 +33,12 @@ class Endpoint(Enum):
     ZDM_STATION_IDS: tuple[str, list[str]] = ("/mvgStationGlobalIds", [])
     ZDM_STATIONS: tuple[str, list[str]] = ("/stations", [])
     ZDM_LINES: tuple[str, list[str]] = ("/lines", [])
+
+    BGW_PT_LOCATIONS: tuple[str, list[str]] = ("/locations", ["query"])
+    BGW_PT_DEPARTURES: tuple[str, list[str]] = (
+        "/departures",
+        ["globalId", "limit", "offsetInMinutes"],
+    )
 
 
 class TransportType(Enum):
@@ -212,9 +219,9 @@ class MvgApi:
         """
         query = query.strip()
         try:
-            args = dict.fromkeys(Endpoint.FIB_LOCATION.value[1])
+            args = dict.fromkeys(Endpoint.BGW_PT_LOCATIONS.value[1])
             args.update({"query": query.strip()})
-            result = await MvgApi.__api(Base.FIB, Endpoint.FIB_LOCATION, args)
+            result = await MvgApi.__api(Base.BGW_PT, Endpoint.BGW_PT_LOCATIONS, args)
             assert isinstance(result, list)
 
             # return None if result is empty
@@ -357,7 +364,7 @@ class MvgApi:
             raise ValueError("Invalid format of global staton id.")
 
         try:
-            args = dict.fromkeys(Endpoint.FIB_LOCATION.value[1])
+            args = dict.fromkeys(Endpoint.BGW_PT_DEPARTURES.value[1])
             args.update(
                 {"globalId": station_id, "offsetInMinutes": offset, "limit": limit}
             )
@@ -370,7 +377,7 @@ class MvgApi:
                     )
                 }
             )
-            result = await MvgApi.__api(Base.FIB, Endpoint.FIB_DEPARTURE, args)
+            result = await MvgApi.__api(Base.BGW_PT, Endpoint.BGW_PT_DEPARTURES, args)
             assert isinstance(result, list)
 
             departures: list[dict[str, Any]] = []
