@@ -16,7 +16,7 @@ classifiers = [
 ]
 
 requires-python = ">=3.7"
-dependencies    = [ "aiohttp~=3.8", "furl~=2.1" ]
+dependencies    = [ "aiohttp~=3.8"]
 
 [[project.authors]]
 name  = "Martin Dziura"

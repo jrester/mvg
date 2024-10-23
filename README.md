@@ -67,6 +67,7 @@ A filtered example looks like this:
 ```python
 from mvg import MvgApi, TransportType
 
+
 station = MvgApi.station('Universität, München')
 if station:
     mvgapi = MvgApi(station['id'])
