@@ -407,12 +407,15 @@ class MvgApi:
                 {
                     "time": int(departure["realtimeDepartureTime"] / 1000),
                     "planned": int(departure["plannedDepartureTime"] / 1000),
+                    "platform": departure.get("platform"),
+                    "realtime": departure.get("realtime"),
                     "line": departure["label"],
                     "destination": departure["destination"],
                     "type": TransportType[departure["transportType"]].value[0],
                     "icon": TransportType[departure["transportType"]].value[1],
                     "cancelled": departure["cancelled"],
                     "messages": departure["messages"],
+                    "stopPointGlobalId": departure["stopPointGlobalId"],
                 }
                 for departure in result
             ]
